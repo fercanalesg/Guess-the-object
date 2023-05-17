@@ -7,19 +7,21 @@ SERVER = 'localhost'
 PORT = 9000
 
 
-
 def cleanTerminal():
     os.system('cls')
 
 def makeMove(role):
-    while True:
-        if role == 'G':
-            client.sendall(input("Type a question: ").encode(PROTOCOL))
-        else:
-            client.sendall(input("Type your answer: ").encode(PROTOCOL))
-
+    #while True:
+    if role == 'G':
+        client.sendall(input("Type a question: ").encode(PROTOCOL))
         response = client.recv(512).decode(PROTOCOL)
-        print(response)
+        print(f"A: {response}")
+    else:
+        client.sendall(input("Type your answer: ").encode(PROTOCOL))
+        response = client.recv(512).decode(PROTOCOL)
+        print(f"Q: {response}")
+
+        
 
 client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 client.connect((SERVER, PORT))
@@ -55,7 +57,7 @@ role = client.recv(512).decode(PROTOCOL)
 cleanTerminal()
 print(role[1:])
 role = role[0]
-#print(role)
+
 
 if role == 'C':
     client.sendall(input(">> ").encode(PROTOCOL))
@@ -64,13 +66,13 @@ else:
 
 while True:
     currentTurn = client.recv(512).decode(PROTOCOL)
-    #cleanTerminal()
-    print(currentTurn)
     if currentTurn[0] == role:
         makeMove(role)
     else:
+        #print(f"Es turno de {currentTurn}")
+        print("Waiting for the question...")
         response = client.recv(512).decode(PROTOCOL)
-        print(f"R: {response}")
+        print(f"Q: {response}")
 
 
 

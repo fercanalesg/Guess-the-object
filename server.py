@@ -24,6 +24,7 @@ names = []
 players = []
 Chooser = 'C'
 Guesser = 'G'
+counter = 0
 
 def sendToBothPlayers(message):
     for player in players:
@@ -44,6 +45,7 @@ def sendTurn(conn, p):
             player.sendall(nextTurn.encode(PROTOCOL))
 
 def handle_client(conn, p): 
+    global counter
     name = conn.recv(512).decode(PROTOCOL)                                   # We recover the clients name
     names.insert(p, name)
     print(f"{name} is player {p}")
@@ -56,26 +58,18 @@ def handle_client(conn, p):
     conn.sendall(game.choosingCategoryMessage(p).encode(PROTOCOL))
     time.sleep(2) 
     if p == 0:
-        print("LOCKED")
-        #lock.acquire()
         category = int(conn.recv(512).decode(PROTOCOL))
-        print(f"Player {p} says: {category}")
         conn.sendall(game.choosingRolesMessage(names).encode(PROTOCOL))
         guesser = conn.recv(512).decode(PROTOCOL)
         game.setRolesAndCategory(names,category, guesser)
         game.cont = True
-        #lock.release()
-        print("REALEASED")
     else:
         while not game.cont:                                                # The second client must wait until the host prepares the game Category and chooses the Guesser
-            #print(f"{p} inside")
             pass
 
     conn.sendall(game.choosingObjectMessage(names, p).encode(PROTOCOL))
     time.sleep(2)
     if names[p] == game.currentChooser:
-        print(f"{p} LOCKED")
-        #lock.acquire()
         object = conn.recv(512).decode(PROTOCOL)
         game.setObject(object)
         game.startGame = True
@@ -84,22 +78,28 @@ def handle_client(conn, p):
             pass
 
     time.sleep(1)
+    currentPlayer = game.currentGuesser
+
     conn.sendall(Guesser.encode(PROTOCOL))                     # We send the Guesser letter cause we always start the game with a question
     
-    while True:
+    response = ''
+    while response != game.secretObject and counter < game.possibleQuestions[game.currentCategory]:
+        print(f"{p} ENTERED")
         response = conn.recv(512).decode(PROTOCOL)
         if objectGuessed(response):
             break
+        if names[p] == game.currentGuesser:
+            counter +=1
+            print(f"{counter} {names[p]}: {response}")
+        else:
+            print(f"{names[p]}: {response}")
 
-        print(f"{p} {response}")
         sendToOtherPlayer(conn, p, response)
         time.sleep(1)
         sendTurn(conn,p)
 
-
-
-
-
+    print("MAMO no mas preguntas bro")
+    conn.close()
 
 
 p = 0
@@ -118,5 +118,11 @@ def objectGuessed(response):
     if response.upper() == game.secretObject.upper():
         return True
     return None
+
+def checkResponse(conn):
+    response = conn.recv(512).decode(PROTOCOL)
+    if response.upper() == game.secretObject.upper():
+        return None
+    return response
 
 
