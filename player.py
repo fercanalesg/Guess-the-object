@@ -6,20 +6,26 @@ PROTOCOL = "utf-8"
 SERVER = 'localhost'
 PORT = 9000
 
+DIVISION = "--------------------------------------------------------------------------------"
 
 def cleanTerminal():
     os.system('cls')
 
-def makeMove(role):
+def makeMove(role, numQuestion):
     #while True:
     if role == 'G':
-        client.sendall(input("Type a question: ").encode(PROTOCOL))
+        client.sendall(input(f"{DIVISION}\nQuestion {numQuestion}\nType a question: ").encode(PROTOCOL))
         response = client.recv(512).decode(PROTOCOL)
-        print(f"A: {response}")
+        print(f"{response}\n")
     else:
-        client.sendall(input("Type your answer: ").encode(PROTOCOL))
+        client.sendall(input(f"{DIVISION}\nAnswer {numQuestion}\nType your answer: ").encode(PROTOCOL))
         response = client.recv(512).decode(PROTOCOL)
-        print(f"Q: {response}")
+        print(f"\n{response}")
+        
+
+    if "Game Over" in response:
+        return True
+    return None
 
         
 
@@ -62,17 +68,23 @@ role = role[0]
 if role == 'C':
     client.sendall(input(">> ").encode(PROTOCOL))
 else:
-    print("Waiting for the CHOOSER to type the object...")
+    print("Waiting for the CHOOSER to type the object...\n")
 
+######################### THE GAME STARTS #########################
 while True:
     currentTurn = client.recv(512).decode(PROTOCOL)
+    numQuestion = currentTurn[1]
     if currentTurn[0] == role:
-        makeMove(role)
+        move = makeMove(role, numQuestion)
+        if move:
+            break
     else:
-        #print(f"Es turno de {currentTurn}")
-        print("Waiting for the question...")
+        print("Waiting for the question...\n")
         response = client.recv(512).decode(PROTOCOL)
-        print(f"Q: {response}")
+        print(f"{response}")
+        if "Game over" in response:
+            break
+client.close()
 
 
 
