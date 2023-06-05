@@ -18,7 +18,7 @@ class Game:
         self.categories = ["Tools and equipement", "Sports", "House Objects", "Animals", "Clothing and accesories"]
         self.possibleQuestions = {1:3, 2:8 ,3:7 , 4:6, 5:6}
 
-        self.cont = False
+        self.cont = False                        
         self.startGame = False
 
 
@@ -37,6 +37,8 @@ class Game:
             message = "Choose the category please:\n"
             for i, cat in enumerate(self.categories):                                       # This is to make a list of the possible categories, each with their possible questions
                 message += f"{i+1} {cat} ({self.possibleQuestions[i+1]} questions)\n"
+            
+            message += "\n(Press 0 to Exit the game)\n"
         else:
             self.ready = False
             message = "The host is preparing the game..."                                   # If the player is not the host, he/she will receive a waiting message
